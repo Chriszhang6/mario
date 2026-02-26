@@ -179,6 +179,7 @@ let lives = 3;
 let gameOver = false;
 let cameraX = 0;
 let currentLevel = 1;
+let maxLevelReached = 1; // 记录玩家到达的最高关卡
 
 // 按键状态
 const keys = {
@@ -1534,6 +1535,7 @@ function update() {
         if (currentLevel < 2) {
             // 进入下一关
             currentLevel++;
+            maxLevelReached = currentLevel; // 更新到达的最高关卡
             updateWorldDisplay();
             score += 1000;
             updateScoreDisplay();
@@ -1592,7 +1594,7 @@ function restartGame() {
     score = 0;
     lives = 3;
     gameOver = false;
-    currentLevel = 1;
+    currentLevel = maxLevelReached; // 从到达的最高关卡重新开始
     updateWorldDisplay();
     mario.x = 100;
     mario.y = 300;

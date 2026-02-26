@@ -239,6 +239,8 @@ function initLevel() {
         initLevel1();
     } else if (currentLevel === 2) {
         initLevel2();
+    } else if (currentLevel === 3) {
+        initLevel3();
     }
 }
 
@@ -563,6 +565,207 @@ function initLevel2() {
     // 终点旗帜
     level.flag = {
         x: 3800,
+        y: 160,
+        width: 10,
+        height: 200
+    };
+}
+
+// 第三关 - 专家难度
+function initLevel3() {
+    level.width = 4800;
+
+    // 地面 - 更多坑洞
+    for (let i = 0; i < 60; i++) {
+        // 在某些位置创建坑洞
+        if (i >= 6 && i <= 9) continue;  // 第一个坑
+        if (i >= 15 && i <= 18) continue; // 第二个坑
+        if (i >= 24 && i <= 28) continue; // 第三个坑
+        if (i >= 33 && i <= 37) continue; // 第四个坑
+        if (i >= 42 && i <= 46) continue; // 第五个坑
+        if (i >= 51 && i <= 54) continue; // 第六个坑
+
+        level.platforms.push({
+            x: i * 80,
+            y: 360,
+            width: 80,
+            height: 40,
+            type: 'ground'
+        });
+    }
+
+    // 悬浮平台 - 极高且极分散
+    const floatingPlatforms = [
+        { x: 150, y: 240, width: 80, hasCoin: true },
+        { x: 280, y: 180, width: 60 },
+        { x: 400, y: 120, width: 80, hasCoin: true },
+        { x: 600, y: 260, width: 100 },
+        { x: 800, y: 140, width: 60, hasCoin: true },
+        { x: 950, y: 100, width: 80 },
+        { x: 1150, y: 220, width: 120 },
+        { x: 1350, y: 140, width: 60, hasCoin: true },
+        { x: 1500, y: 80, width: 80 },
+        { x: 1700, y: 200, width: 100, hasCoin: true },
+        { x: 1900, y: 120, width: 60 },
+        { x: 2100, y: 180, width: 80, hasCoin: true },
+        { x: 2300, y: 100, width: 60 },
+        { x: 2500, y: 240, width: 120 },
+        { x: 2750, y: 160, width: 80, hasCoin: true },
+        { x: 2950, y: 100, width: 60 },
+        { x: 3150, y: 180, width: 100 },
+        { x: 3400, y: 120, width: 80, hasCoin: true },
+        { x: 3600, y: 200, width: 60 },
+        { x: 3800, y: 140, width: 80, hasCoin: true },
+        { x: 4000, y: 220, width: 100 },
+        { x: 4200, y: 100, width: 60 },
+        { x: 4400, y: 160, width: 80, hasCoin: true },
+        { x: 4600, y: 120, width: 60 }
+    ];
+
+    floatingPlatforms.forEach(p => {
+        level.platforms.push({
+            x: p.x,
+            y: p.y,
+            width: p.width,
+            height: 20,
+            type: p.hasCoin ? 'question' : 'brick',
+            hasCoin: p.hasCoin || false,
+            coinCollected: false,
+            bounceOffset: 0,
+            bounceTime: 0
+        });
+    });
+
+    // 单独的问号砖块 - 极分散且位置更高
+    const questionBricks = [
+        { x: 100, y: 160 },
+        { x: 220, y: 80 },
+        { x: 350, y: 60 },
+        { x: 500, y: 100 },
+        { x: 680, y: 140 },
+        { x: 880, y: 60 },
+        { x: 1050, y: 40 },
+        { x: 1250, y: 120 },
+        { x: 1450, y: 80 },
+        { x: 1620, y: 40 },
+        { x: 1820, y: 100 },
+        { x: 2020, y: 140 },
+        { x: 2220, y: 60 },
+        { x: 2420, y: 80 },
+        { x: 2680, y: 120 },
+        { x: 2880, y: 60 },
+        { x: 3080, y: 80 },
+        { x: 3280, y: 140 },
+        { x: 3520, y: 60 },
+        { x: 3720, y: 100 },
+        { x: 3920, y: 140 },
+        { x: 4120, y: 60 },
+        { x: 4320, y: 100 },
+        { x: 4520, y: 80 },
+        { x: 4680, y: 60 }
+    ];
+
+    questionBricks.forEach(b => {
+        level.platforms.push({
+            x: b.x,
+            y: b.y,
+            width: 40,
+            height: 20,
+            type: 'question',
+            hasCoin: true,
+            coinCollected: false,
+            bounceOffset: 0,
+            bounceTime: 0
+        });
+    });
+
+    // 金币 - 极少但位置极具挑战性
+    const coinPositions = [
+        { x: 120, y: 200 },
+        { x: 250, y: 140 },
+        { x: 380, y: 80 },
+        { x: 580, y: 220 },
+        { x: 820, y: 100 },
+        { x: 1000, y: 60 },
+        { x: 1200, y: 180 },
+        { x: 1400, y: 100 },
+        { x: 1620, y: 60 },
+        { x: 1850, y: 140 },
+        { x: 2080, y: 180 },
+        { x: 2280, y: 80 },
+        { x: 2520, y: 200 },
+        { x: 2720, y: 120 },
+        { x: 2980, y: 60 },
+        { x: 3180, y: 140 },
+        { x: 3450, y: 80 },
+        { x: 3650, y: 160 },
+        { x: 3880, y: 100 },
+        { x: 4080, y: 160 },
+        { x: 4280, y: 80 },
+        { x: 4480, y: 120 },
+        { x: 4650, y: 80 }
+    ];
+
+    coinPositions.forEach(c => {
+        level.coins.push({
+            x: c.x,
+            y: c.y,
+            width: 20,
+            height: 20,
+            collected: false,
+            frame: 0
+        });
+    });
+
+    // 敌人 - 最快最多
+    const enemyPositions = [
+        { x: 250, y: 330, speed: 3 },
+        { x: 450, y: 330, speed: 3.5 },
+        { x: 650, y: 330, speed: 3.2 },
+        { x: 850, y: 330, speed: 3.8 },
+        { x: 1050, y: 330, speed: 3 },
+        { x: 1250, y: 330, speed: 3.5 },
+        { x: 1450, y: 330, speed: 3.8 },
+        { x: 1650, y: 330, speed: 3.2 },
+        { x: 1850, y: 330, speed: 3.5 },
+        { x: 2050, y: 330, speed: 3 },
+        { x: 2250, y: 330, speed: 3.8 },
+        { x: 2450, y: 330, speed: 3.2 },
+        { x: 2650, y: 330, speed: 3.5 },
+        { x: 2850, y: 330, speed: 3 },
+        { x: 3050, y: 330, speed: 3.8 },
+        { x: 3250, y: 330, speed: 3.2 },
+        { x: 3450, y: 330, speed: 3.5 },
+        { x: 3650, y: 330, speed: 3.8 },
+        { x: 3850, y: 330, speed: 3 },
+        { x: 4050, y: 330, speed: 3.5 },
+        { x: 4250, y: 330, speed: 3.2 },
+        { x: 4450, y: 330, speed: 3.8 },
+        { x: 4650, y: 330, speed: 3.5 }
+    ];
+
+    enemyPositions.forEach(e => {
+        level.enemies.push({
+            x: e.x,
+            y: e.y,
+            width: 32,
+            height: 32,
+            velocityX: -Math.random() > 0.5 ? e.speed : -e.speed,
+            alive: true,
+            frame: 0,
+            squish: 0,
+            squishTime: 0
+        });
+    });
+
+    // 更新敌人碰撞检测的y位置
+    level.enemies.forEach(e => {
+        e.y = e.y - 2;
+    });
+
+    // 终点旗帜
+    level.flag = {
+        x: 4600,
         y: 160,
         width: 10,
         height: 200
@@ -1532,7 +1735,7 @@ function update() {
 
     // 到达终点
     if (checkCollision(mario, level.flag)) {
-        if (currentLevel < 2) {
+        if (currentLevel < 3) {
             // 进入下一关
             currentLevel++;
             maxLevelReached = currentLevel; // 更新到达的最高关卡

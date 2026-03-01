@@ -202,7 +202,14 @@ const mario = {
     grounded: false,
     direction: 1, // 1 = 右, -1 = 左
     frameX: 0,
-    frameTimer: 0
+    frameTimer: 0,
+    // 蘑菇效果
+    isEnlarged: false,
+    isShrinked: false,
+    isInvincible: false,
+    powerUpTimer: 0,
+    baseWidth: 32,
+    baseHeight: 40
 };
 
 // 格式化分数显示
@@ -224,7 +231,8 @@ const level = {
     flag: null,
     width: 3200,
     poppedCoins: [], // 从砖块弹出的金币
-    particles: []    // 粒子效果
+    particles: [],    // 粒子效果
+    mushrooms: []     // 蘑菇道具
 };
 
 // 初始化关卡
@@ -234,6 +242,7 @@ function initLevel() {
     level.enemies = [];
     level.poppedCoins = [];
     level.particles = [];
+    level.mushrooms = [];
 
     if (currentLevel === 1) {
         initLevel1();
@@ -380,6 +389,29 @@ function initLevel1() {
     // 更新敌人碰撞检测的y位置（新设计稍高一些）
     level.enemies.forEach(e => {
         e.y = e.y - 2;
+    });
+
+    // 蘑菇道具（放大、缩小、隐身）
+    const mushroomPositions = [
+        { x: 450, y: 170, type: 'enlarge' },     // 放大蘑菇
+        { x: 850, y: 110, type: 'shrink' },      // 缩小蘑菇
+        { x: 1200, y: 80, type: 'invincible' },  // 隐身蘑菇
+        { x: 1650, y: 220, type: 'enlarge' },
+        { x: 2000, y: 150, type: 'invincible' },
+        { x: 2400, y: 130, type: 'shrink' },
+        { x: 2800, y: 180, type: 'enlarge' }
+    ];
+
+    mushroomPositions.forEach(m => {
+        level.mushrooms.push({
+            x: m.x,
+            y: m.y,
+            width: 24,
+            height: 24,
+            type: m.type,
+            collected: false,
+            frame: 0
+        });
     });
 
     // 终点旗帜
@@ -560,6 +592,29 @@ function initLevel2() {
     // 更新敌人碰撞检测的y位置
     level.enemies.forEach(e => {
         e.y = e.y - 2;
+    });
+
+    // 蘑菇道具 - 第二关
+    const mushroomPositions = [
+        { x: 550, y: 180, type: 'enlarge' },
+        { x: 1050, y: 120, type: 'invincible' },
+        { x: 1550, y: 180, type: 'shrink' },
+        { x: 2050, y: 140, type: 'enlarge' },
+        { x: 2550, y: 160, type: 'invincible' },
+        { x: 3050, y: 130, type: 'shrink' },
+        { x: 3550, y: 170, type: 'enlarge' }
+    ];
+
+    mushroomPositions.forEach(m => {
+        level.mushrooms.push({
+            x: m.x,
+            y: m.y,
+            width: 24,
+            height: 24,
+            type: m.type,
+            collected: false,
+            frame: 0
+        });
     });
 
     // 终点旗帜
@@ -763,6 +818,30 @@ function initLevel3() {
         e.y = e.y - 2;
     });
 
+    // 蘑菇道具 - 第三关
+    const mushroomPositions = [
+        { x: 650, y: 170, type: 'enlarge' },
+        { x: 1150, y: 110, type: 'invincible' },
+        { x: 1650, y: 190, type: 'shrink' },
+        { x: 2150, y: 130, type: 'enlarge' },
+        { x: 2650, y: 150, type: 'invincible' },
+        { x: 3150, y: 120, type: 'shrink' },
+        { x: 3650, y: 180, type: 'enlarge' },
+        { x: 4150, y: 140, type: 'invincible' }
+    ];
+
+    mushroomPositions.forEach(m => {
+        level.mushrooms.push({
+            x: m.x,
+            y: m.y,
+            width: 24,
+            height: 24,
+            type: m.type,
+            collected: false,
+            frame: 0
+        });
+    });
+
     // 终点旗帜
     level.flag = {
         x: 4600,
@@ -783,150 +862,214 @@ function drawMario() {
     const isMoving = mario.velocityX !== 0;
     const isJumping = !mario.grounded;
 
+    // 计算缩放比例
+    let scaleRatio = 1.0;
+    if (mario.isEnlarged) {
+        scaleRatio = 3.0; // 放大3倍
+    } else if (mario.isShrinked) {
+        scaleRatio = 0.25; // 缩小到25%
+    }
+
+    // 根据缩放调整基础坐标
+    const baseWidth = 32;
+    const baseHeight = 40;
+    const scaledWidth = baseWidth * scaleRatio;
+    const scaledHeight = baseHeight * scaleRatio;
+    
+    // 对于缩小的情况，需要调整Y位置使Mario站在平台上而不是浮起来
+    let adjustedY = mario.y;
+    if (mario.isShrinked) {
+        adjustedY = mario.y + (baseHeight - scaledHeight);
+    }
+
     // 根据方向翻转
     if (mario.direction === -1) {
-        ctx.translate(screenX + mario.width / 2, 0);
+        ctx.translate(screenX + scaledWidth / 2, 0);
         ctx.scale(-1, 1);
-        ctx.translate(-(screenX + mario.width / 2), 0);
+        ctx.translate(-(screenX + scaledWidth / 2), 0);
     }
 
     const x = screenX;
-    const y = mario.y;
+    const y = adjustedY;
+    
+    // 应用整体缩放
+    ctx.translate(x + scaledWidth / 2, y + scaledHeight / 2);
+    ctx.scale(scaleRatio, scaleRatio);
+    ctx.translate(-(x + scaledWidth / 2) / scaleRatio, -(y + scaledHeight / 2) / scaleRatio);
 
-    // === 帽子 ===
-    // 主帽体
-    ctx.fillStyle = '#ff0000';
-    ctx.fillRect(x + 4, y, 20, 4);
-    ctx.fillRect(x + 2, y + 4, 24, 4);
+    const x_unscaled = x / scaleRatio;
+    const y_unscaled = y / scaleRatio;
 
-    // 帽檐
-    ctx.fillStyle = '#ff0000';
-    ctx.fillRect(x + 6, y + 8, 16, 2);
-
-    // 帽子阴影
+    // === 帽子改进版 ===
+    // 帽子底层 - 深红色
     ctx.fillStyle = '#cc0000';
-    ctx.fillRect(x + 20, y + 2, 2, 2);
-    ctx.fillRect(x + 22, y + 4, 2, 2);
+    ctx.fillRect(x_unscaled + 2, y_unscaled + 4, 24, 4);
+    
+    // 帽子主体 - 红色
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(x_unscaled + 4, y_unscaled, 20, 4);
+    ctx.fillRect(x_unscaled + 2, y_unscaled + 4, 24, 4);
+    
+    // 帽子顶部圆角高光
+    ctx.fillStyle = '#ff6666';
+    ctx.fillRect(x_unscaled + 6, y_unscaled + 2, 2, 2);
+    ctx.fillRect(x_unscaled + 18, y_unscaled + 2, 2, 2);
+
+    // 帽檐 - 深红色阴影
+    ctx.fillStyle = '#cc0000';
+    ctx.fillRect(x_unscaled + 6, y_unscaled + 8, 16, 1);
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(x_unscaled + 5, y_unscaled + 9, 18, 1);
 
     // === 脸部 ===
-    // 皮肤
-    ctx.fillStyle = '#ffa550';
-    ctx.fillRect(x + 6, y + 8, 16, 8);
-    ctx.fillRect(x + 4, y + 10, 2, 6);
-    ctx.fillRect(x + 22, y + 10, 2, 6);
+    // 皮肤 - 肤色
+    ctx.fillStyle = '#ffb366';
+    ctx.fillRect(x_unscaled + 6, y_unscaled + 8, 16, 8);
+    ctx.fillRect(x_unscaled + 4, y_unscaled + 10, 2, 6);
+    ctx.fillRect(x_unscaled + 22, y_unscaled + 10, 2, 6);
 
-    // 脸颊
-    ctx.fillStyle = '#ff9040';
-    ctx.fillRect(x + 4, y + 12, 2, 2);
-    ctx.fillRect(x + 22, y + 12, 2, 2);
+    // 脸颊 - 浅肤色
+    ctx.fillStyle = '#ff8844';
+    ctx.fillRect(x_unscaled + 4, y_unscaled + 12, 2, 3);
+    ctx.fillRect(x_unscaled + 22, y_unscaled + 12, 2, 3);
 
-    // 鼻子
-    ctx.fillStyle = '#ffa550';
-    ctx.fillRect(x + 20, y + 12, 4, 4);
+    // 鼻子 - 鼻子颜色
+    ctx.fillStyle = '#ff9955';
+    ctx.fillRect(x_unscaled + 19, y_unscaled + 12, 4, 4);
+    ctx.fillStyle = '#ff7733';
+    ctx.fillRect(x_unscaled + 20, y_unscaled + 14, 2, 2);
 
     // === 眼睛 ===
     // 眼白
-    ctx.fillStyle = '#000';
-    ctx.fillRect(x + 16, y + 10, 4, 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x_unscaled + 15, y_unscaled + 10, 4, 3);
+    ctx.fillRect(x_unscaled + 8, y_unscaled + 10, 4, 3);
+    
+    // 瞳孔
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(x_unscaled + 16, y_unscaled + 11, 2, 2);
+    ctx.fillRect(x_unscaled + 9, y_unscaled + 11, 2, 2);
 
-    // 眉毛
-    ctx.fillStyle = '#000';
-    ctx.fillRect(x + 14, y + 8, 6, 1);
+    // 眉毛 - 黑色
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(x_unscaled + 14, y_unscaled + 8, 6, 1);
+    ctx.fillRect(x_unscaled + 7, y_unscaled + 8, 4, 1);
 
-    // === 胡须/嘴巴 ===
+    // === 嘴巴 ===
     ctx.fillStyle = '#4a3000';
-    ctx.fillRect(x + 20, y + 14, 4, 2);
-    ctx.fillRect(x + 22, y + 12, 2, 2);
+    ctx.fillRect(x_unscaled + 20, y_unscaled + 14, 2, 2);
 
     // === 身体/衬衫 ===
+    // 衬衫主体 - 红色
     ctx.fillStyle = '#ff0000';
-    ctx.fillRect(x + 6, y + 16, 16, 4);
-    ctx.fillRect(x + 4, y + 18, 4, 4);
-    ctx.fillRect(x + 20, y + 18, 4, 4);
-    ctx.fillRect(x + 6, y + 20, 16, 4);
+    ctx.fillRect(x_unscaled + 6, y_unscaled + 16, 16, 4);
+    ctx.fillRect(x_unscaled + 4, y_unscaled + 18, 4, 4);
+    ctx.fillRect(x_unscaled + 20, y_unscaled + 18, 4, 4);
+    ctx.fillRect(x_unscaled + 6, y_unscaled + 20, 16, 4);
 
-    // 衬衫阴影
+    // 衬衫高光 - 浅红色
+    ctx.fillStyle = '#ff6666';
+    ctx.fillRect(x_unscaled + 8, y_unscaled + 18, 2, 2);
+    ctx.fillRect(x_unscaled + 16, y_unscaled + 18, 2, 2);
+
+    // 衬衫阴影 - 深红色
     ctx.fillStyle = '#cc0000';
-    ctx.fillRect(x + 6, y + 20, 2, 2);
-    ctx.fillRect(x + 18, y + 20, 2, 2);
+    ctx.fillRect(x_unscaled + 6, y_unscaled + 22, 2, 2);
+    ctx.fillRect(x_unscaled + 20, y_unscaled + 22, 2, 2);
+
+    // === 背带 ===
+    ctx.fillStyle = '#0000dd';
+    ctx.fillRect(x_unscaled + 8, y_unscaled + 20, 2, 4);
+    ctx.fillRect(x_unscaled + 16, y_unscaled + 20, 2, 4);
 
     // === 背带裤 ===
     ctx.fillStyle = '#0000ff';
-    ctx.fillRect(x + 8, y + 22, 12, 4);
-    ctx.fillRect(x + 6, y + 24, 16, 6);
+    ctx.fillRect(x_unscaled + 8, y_unscaled + 22, 12, 4);
+    ctx.fillRect(x_unscaled + 6, y_unscaled + 24, 16, 6);
 
-    // 裤子高光
-    ctx.fillStyle = '#4080ff';
-    ctx.fillRect(x + 8, y + 24, 2, 2);
-    ctx.fillRect(x + 18, y + 24, 2, 2);
+    // 裤子高光 - 浅蓝色
+    ctx.fillStyle = '#6666ff';
+    ctx.fillRect(x_unscaled + 8, y_unscaled + 24, 2, 2);
+    ctx.fillRect(x_unscaled + 20, y_unscaled + 24, 2, 2);
+    
+    // 裤子阴影 - 深蓝色
+    ctx.fillStyle = '#0000aa';
+    ctx.fillRect(x_unscaled + 10, y_unscaled + 28, 2, 2);
+    ctx.fillRect(x_unscaled + 18, y_unscaled + 28, 2, 2);
 
     // === 手臂 ===
     ctx.fillStyle = '#ff0000';
     if (isJumping) {
-        // 跳跃姿势 - 手臂向上
-        ctx.fillRect(x + 2, y + 14, 4, 6);
-        ctx.fillRect(x + 22, y + 14, 4, 6);
+        ctx.fillRect(x_unscaled + 2, y_unscaled + 14, 4, 6);
+        ctx.fillRect(x_unscaled + 22, y_unscaled + 14, 4, 6);
     } else if (isMoving) {
-        // 行走摆臂
         const armOffset = Math.sin(Date.now() / 80) * 2;
-        ctx.fillRect(x + 2, y + 16 + armOffset, 4, 6);
-        ctx.fillRect(x + 22, y + 16 - armOffset, 4, 6);
+        ctx.fillRect(x_unscaled + 2, y_unscaled + 16 + armOffset, 4, 6);
+        ctx.fillRect(x_unscaled + 22, y_unscaled + 16 - armOffset, 4, 6);
     } else {
-        // 站立
-        ctx.fillRect(x + 2, y + 18, 4, 6);
-        ctx.fillRect(x + 22, y + 18, 4, 6);
+        ctx.fillRect(x_unscaled + 2, y_unscaled + 18, 4, 6);
+        ctx.fillRect(x_unscaled + 22, y_unscaled + 18, 4, 6);
     }
 
-    // 手
-    ctx.fillStyle = '#ffa550';
+    // 手 - 肤色
+    ctx.fillStyle = '#ffb366';
     if (isJumping) {
-        ctx.fillRect(x + 2, y + 10, 3, 4);
-        ctx.fillRect(x + 23, y + 10, 3, 4);
+        ctx.fillRect(x_unscaled + 1, y_unscaled + 10, 4, 4);
+        ctx.fillRect(x_unscaled + 23, y_unscaled + 10, 4, 4);
     } else {
-        ctx.fillRect(x + 2, y + 22, 3, 3);
-        ctx.fillRect(x + 23, y + 22, 3, 3);
+        ctx.fillRect(x_unscaled + 0, y_unscaled + 22, 4, 3);
+        ctx.fillRect(x_unscaled + 24, y_unscaled + 22, 4, 3);
     }
 
     // === 腿/脚 ===
     ctx.fillStyle = '#0000ff';
     if (isJumping) {
-        // 跳跃 - 腿伸直
-        ctx.fillRect(x + 6, y + 28, 8, 4);
-        ctx.fillRect(x + 14, y + 28, 8, 4);
+        ctx.fillRect(x_unscaled + 6, y_unscaled + 28, 8, 4);
+        ctx.fillRect(x_unscaled + 14, y_unscaled + 28, 8, 4);
     } else if (isMoving) {
-        // 行走 - 腿交替
         const legOffset = Math.sin(Date.now() / 80) * 3;
-        ctx.fillRect(x + 6, y + 28, 8, 6);
-        ctx.fillRect(x + 14, y + 28, 8, 6);
+        ctx.fillRect(x_unscaled + 6, y_unscaled + 28, 8, 6);
+        ctx.fillRect(x_unscaled + 14, y_unscaled + 28, 8, 6);
     } else {
-        // 站立
-        ctx.fillRect(x + 6, y + 28, 8, 6);
-        ctx.fillRect(x + 14, y + 28, 8, 6);
+        ctx.fillRect(x_unscaled + 6, y_unscaled + 28, 8, 6);
+        ctx.fillRect(x_unscaled + 14, y_unscaled + 28, 8, 6);
     }
 
-    // 鞋子
-    ctx.fillStyle = '#4a3000';
+    // 鞋子 - 棕色
+    ctx.fillStyle = '#5a3a00';
     if (isMoving) {
         const footLift = Math.sin(Date.now() / 80) * 2;
-        ctx.fillRect(x + 4, y + 32 + footLift, 10, 4);
-        ctx.fillRect(x + 18, y + 32 - footLift, 10, 4);
+        ctx.fillRect(x_unscaled + 4, y_unscaled + 32 + footLift, 10, 4);
+        ctx.fillRect(x_unscaled + 18, y_unscaled + 32 - footLift, 10, 4);
     } else {
-        ctx.fillRect(x + 4, y + 32, 10, 4);
-        ctx.fillRect(x + 18, y + 32, 10, 4);
+        ctx.fillRect(x_unscaled + 4, y_unscaled + 32, 10, 4);
+        ctx.fillRect(x_unscaled + 18, y_unscaled + 32, 10, 4);
     }
 
-    // 鞋底
+    // 鞋底 - 深棕色
     ctx.fillStyle = '#2a1800';
     if (isMoving) {
         const footLift = Math.sin(Date.now() / 80) * 2;
-        ctx.fillRect(x + 4, y + 34 + footLift, 10, 2);
-        ctx.fillRect(x + 18, y + 34 - footLift, 10, 2);
+        ctx.fillRect(x_unscaled + 4, y_unscaled + 34 + footLift, 10, 2);
+        ctx.fillRect(x_unscaled + 18, y_unscaled + 34 - footLift, 10, 2);
     } else {
-        ctx.fillRect(x + 4, y + 34, 10, 2);
-        ctx.fillRect(x + 18, y + 34, 10, 2);
+        ctx.fillRect(x_unscaled + 4, y_unscaled + 34, 10, 2);
+        ctx.fillRect(x_unscaled + 18, y_unscaled + 34, 10, 2);
     }
 
     ctx.restore();
+    
+    // 在restore之后绘制隐身效果光环（不受缩放影响）
+    if (mario.isInvincible) {
+        ctx.save();
+        const pulse = Math.sin(Date.now() / 100) * 0.5 + 0.5;
+        ctx.strokeStyle = `rgba(255, 255, 100, ${0.3 + pulse * 0.3})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(screenX + scaledWidth / 2, adjustedY + scaledHeight / 2, scaledWidth / 2 + 6, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
 }
 
 // 绘制平台
@@ -1161,6 +1304,32 @@ function createPoppedCoin(x, y) {
     SoundEffects.coin();
 }
 
+// 应用蘑菇道具效果
+function applyMushroomPowerUp(type) {
+    mario.powerUpTimer = 600; // 10秒 (600帧 @ 60fps)
+    
+    SoundEffects.coin(); // 使用金币音效
+    score += 50;
+    updateScoreDisplay();
+    
+    if (type === 'enlarge') {
+        mario.isEnlarged = true;
+        mario.isShrinked = false;
+        mario.isInvincible = false;
+        mario.speed = 6;
+    } else if (type === 'shrink') {
+        mario.isShrinked = true;
+        mario.isEnlarged = false;
+        mario.isInvincible = false;
+        mario.speed = 4;
+    } else if (type === 'invincible') {
+        mario.isInvincible = true;
+        mario.isEnlarged = false;
+        mario.isShrinked = false;
+        mario.speed = 5;
+    }
+}
+
 // 更新粒子效果
 function updateParticles() {
     level.particles.forEach((particle, index) => {
@@ -1184,6 +1353,71 @@ function drawParticles() {
         ctx.beginPath();
         ctx.arc(screenX, particle.y, 4, 0, Math.PI * 2);
         ctx.fill();
+    });
+}
+
+// 绘制蘑菇道具
+function drawMushrooms() {
+    level.mushrooms.forEach(mushroom => {
+        if (mushroom.collected) return;
+        
+        const screenX = mushroom.x - cameraX;
+        if (screenX > -mushroom.width && screenX < canvas.width) {
+            const x = screenX;
+            const y = mushroom.y;
+            
+            // 动画
+            const bobbing = Math.sin(Date.now() / 300) * 2;
+            
+            // 根据蘑菇类型选择颜色
+            let topColor, bottomColor, stemColor;
+            
+            if (mushroom.type === 'enlarge') {
+                // 放大蘑菇 - 红色
+                topColor = '#ff3333';
+                bottomColor = '#cc0000';
+                stemColor = '#ffcc00';
+            } else if (mushroom.type === 'shrink') {
+                // 缩小蘑菇 - 蓝色
+                topColor = '#3366ff';
+                bottomColor = '#0033cc';
+                stemColor = '#ffcc00';
+            } else if (mushroom.type === 'invincible') {
+                // 隐身蘑菇 - 金色/闪耀
+                topColor = '#ffdd00';
+                bottomColor = '#ffaa00';
+                stemColor = '#ff00ff';
+            }
+            
+            // 蘑菇茎 - 黄色
+            ctx.fillStyle = stemColor;
+            ctx.fillRect(x + 10, y + 12, 4, 8);
+            ctx.fillRect(x + 8, y + 10, 8, 2);
+            
+            // 蘑菇顶部（圆形）
+            ctx.fillStyle = topColor;
+            ctx.beginPath();
+            ctx.ellipse(x + 12, y + 6 + bobbing, 10, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 蘑菇顶部高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.beginPath();
+            ctx.ellipse(x + 8, y + 3 + bobbing, 5, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 蘑菇顶部阴影
+            ctx.fillStyle = bottomColor;
+            ctx.beginPath();
+            ctx.ellipse(x + 12, y + 12 + bobbing, 10, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 蘑菇底部斑点
+            ctx.fillStyle = bottomColor;
+            ctx.fillRect(x + 5, y + 8 + bobbing, 3, 3);
+            ctx.fillRect(x + 16, y + 8 + bobbing, 3, 3);
+            ctx.fillRect(x + 10, y + 13 + bobbing, 2, 2);
+        }
     });
 }
 
@@ -1225,87 +1459,84 @@ function drawEnemies() {
             // === 栗宝宝/Goomba 像素风格 ===
 
             // === 蘑菇头/身体上半部分 ===
-            // 主头部 - 棕色大蘑菇形状
-            ctx.fillStyle = '#b85c00';
-            ctx.beginPath();
-            ctx.moveTo(x + 4, y + 14);
-            ctx.lineTo(x + 28, y + 14);
-            ctx.lineTo(x + 30, y + 18);
-            ctx.lineTo(x + 28, y + 22);
-            ctx.lineTo(x + 4, y + 22);
-            ctx.lineTo(x + 2, y + 18);
-            ctx.closePath();
-            ctx.fill();
-
-            // 头部顶部圆弧
+            // 头部顶部圆弧（用矩形堆叠模拟圆形）
             ctx.fillStyle = '#d47420';
-            ctx.fillRect(x + 6, y + 10, 20, 4);
-            ctx.fillRect(x + 8, y + 6, 16, 4);
-            ctx.fillRect(x + 10, y + 2, 12, 4);
-
-            // 头部高光
-            ctx.fillStyle = '#e89440';
-            ctx.fillRect(x + 10, y + 4, 6, 2);
-            ctx.fillRect(x + 8, y + 8, 4, 2);
+            ctx.fillRect(x + 8, y + 2, 16, 4);
+            ctx.fillRect(x + 6, y + 6, 20, 4);
+            
+            // 主头部 - 棕色
+            ctx.fillStyle = '#b85c00';
+            ctx.fillRect(x + 4, y + 10, 24, 12);
+            
+            // 头部高光 - 明亮的棕色
+            ctx.fillStyle = '#d47420';
+            ctx.fillRect(x + 6, y + 10, 8, 4);
+            ctx.fillRect(x + 18, y + 12, 4, 2);
+            
+            // 头部阴影 - 深棕色
+            ctx.fillStyle = '#8c4400';
+            ctx.fillRect(x + 4, y + 20, 3, 2);
+            ctx.fillRect(x + 25, y + 20, 3, 2);
 
             // === 身体下半部分 ===
             ctx.fillStyle = '#b85c00';
-            ctx.fillRect(x + 6, y + 20, 20, 6);
+            ctx.fillRect(x + 6, y + 20, 20, 4);
             ctx.fillRect(x + 4, y + 22, 24, 4);
 
             // 身体阴影
             ctx.fillStyle = '#8c4400';
-            ctx.fillRect(x + 22, y + 20, 4, 2);
-            ctx.fillRect(x + 24, y + 22, 4, 4);
+            ctx.fillRect(x + 4, y + 24, 2, 2);
+            ctx.fillRect(x + 26, y + 24, 2, 2);
 
             // === 眉毛 (愤怒表情) ===
             ctx.fillStyle = '#000';
-            ctx.fillRect(x + 8, y + 10, 6, 2);
-            ctx.fillRect(x + 18, y + 10, 6, 2);
+            ctx.fillRect(x + 8, y + 11, 6, 1);
+            ctx.fillRect(x + 18, y + 11, 6, 1);
 
             // === 眼睛 ===
             // 眼白
             ctx.fillStyle = '#fff';
-            ctx.fillRect(x + 8, y + 12, 6, 6);
-            ctx.fillRect(x + 18, y + 12, 6, 6);
+            ctx.fillRect(x + 8, y + 13, 5, 5);
+            ctx.fillRect(x + 19, y + 13, 5, 5);
 
-            // 瞳孔
+            // 眼睛中心黑色部分
             ctx.fillStyle = '#000';
-            ctx.fillRect(x + 10, y + 14, 3, 3);
+            ctx.fillRect(x + 9, y + 14, 3, 3);
             ctx.fillRect(x + 20, y + 14, 3, 3);
 
             // 眼睛高光
             ctx.fillStyle = '#fff';
-            ctx.fillRect(x + 11, y + 15, 1, 1);
+            ctx.fillRect(x + 10, y + 15, 1, 1);
             ctx.fillRect(x + 21, y + 15, 1, 1);
 
-            // === 嘴巴 (像原版一样的尖牙表情) ===
+            // === 嘴巴 (尖牙表情) ===
             ctx.fillStyle = '#000';
-            ctx.fillRect(x + 12, y + 20, 8, 2);
+            ctx.fillRect(x + 12, y + 19, 8, 2);
 
             // 尖牙
             ctx.fillStyle = '#fff';
-            ctx.fillRect(x + 12, y + 20, 2, 3);
-            ctx.fillRect(x + 18, y + 20, 2, 3);
+            ctx.fillRect(x + 12, y + 19, 2, 3);
+            ctx.fillRect(x + 18, y + 19, 2, 3);
 
             // === 脚 ===
             const leftFootOffset = walkCycle * 2;
             const rightFootOffset = -walkCycle * 2;
 
-            // 左脚
-            ctx.fillStyle = '#000';
-            ctx.fillRect(x + 2, y + 26 + leftFootOffset, 10, 4);
-            ctx.fillRect(x, y + 28 + leftFootOffset, 10, 4);
-
-            // 右脚
-            ctx.fillStyle = '#000';
-            ctx.fillRect(x + 20, y + 26 + rightFootOffset, 10, 4);
-            ctx.fillRect(x + 22, y + 28 + rightFootOffset, 10, 4);
-
-            // 脚底/鞋底
+            // 左脚 - 黑色
             ctx.fillStyle = '#1a1a1a';
-            ctx.fillRect(x, y + 30 + leftFootOffset, 10, 2);
-            ctx.fillRect(x + 22, y + 30 + rightFootOffset, 10, 2);
+            ctx.fillRect(x + 2, y + 26 + leftFootOffset, 10, 4);
+            
+            // 左脚底 - 深色
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(x + 1, y + 29 + leftFootOffset, 10, 2);
+
+            // 右脚 - 黑色
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(x + 20, y + 26 + rightFootOffset, 10, 4);
+            
+            // 右脚底 - 深色
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(x + 21, y + 29 + rightFootOffset, 10, 2);
         }
     });
 }
@@ -1402,21 +1633,36 @@ function drawBackground() {
         const cx = Math.round(screenX);
         const cy = cloud.y;
 
-        // 绘制像素云朵
-        ctx.fillStyle = '#fff';
+        // 云朵 - 改进版本，使用更柔和的形状
+        // 外层云朵 - 浅白
+        ctx.fillStyle = '#ffffff';
+        // 左边圆形
+        ctx.beginPath();
+        ctx.ellipse(cx + 12, cy + 12, 10, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // 中心大圆形
+        ctx.beginPath();
+        ctx.ellipse(cx + 26, cy + 8, 14, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // 右边圆形
+        ctx.beginPath();
+        ctx.ellipse(cx + 42, cy + 12, 10, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-        // 云朵 - 小型
-        // 第一层
-        ctx.fillRect(cx, cy + 12, 8, 8);
-        ctx.fillRect(cx + 8, cy + 8, 8, 12);
-        ctx.fillRect(cx + 16, cy + 4, 16, 16);
-        ctx.fillRect(cx + 32, cy + 8, 8, 12);
-        ctx.fillRect(cx + 40, cy + 12, 8, 8);
+        // 云朵高光 - 纯白色
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.ellipse(cx + 20, cy + 6, 8, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 38, cy + 4, 6, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-        // 第二层
-        ctx.fillRect(cx + 8, cy + 4, 8, 8);
-        ctx.fillRect(cx + 24, cy, 16, 8);
-        ctx.fillRect(cx + 40, cy + 4, 8, 8);
+        // 云朵阴影 - 浅灰
+        ctx.fillStyle = '#e0e0e0';
+        ctx.beginPath();
+        ctx.ellipse(cx + 26, cy + 20, 16, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
     });
 
     // === 像素风格山丘 ===
@@ -1442,26 +1688,42 @@ function drawBackground() {
         const hw = hill.width;
         const hh = hill.height;
 
-        // 山丘主体 - 绿色
-        ctx.fillStyle = '#00a800';
-        // 绘制三角形山丘
-        for (let i = 0; i < hill.height; i += 4) {
+        // 山丘主体 - 多层绿色渐变
+        // 底层 - 最深绿
+        ctx.fillStyle = '#006600';
+        for (let i = hh - 8; i < hh; i += 2) {
+            const rowWidth = Math.floor((i / hh) * (hw / 2));
+            ctx.fillRect(hx + hw / 2 - rowWidth, hy + i, rowWidth * 2, 2);
+        }
+
+        // 中层 - 深绿
+        ctx.fillStyle = '#008800';
+        for (let i = hh / 2; i < hh - 8; i += 4) {
+            const rowWidth = Math.floor((i / hh) * (hw / 2));
+            ctx.fillRect(hx + hw / 2 - rowWidth, hy + i, rowWidth * 2, 4);
+        }
+
+        // 上层 - 亮绿
+        ctx.fillStyle = '#00b800';
+        for (let i = 0; i < hh / 2; i += 4) {
             const rowWidth = Math.floor((i / hh) * (hw / 2));
             ctx.fillRect(hx + hw / 2 - rowWidth, hy + i, rowWidth * 2, 4);
         }
 
         // 山丘条纹装饰 - 深绿色
-        ctx.fillStyle = '#008800';
+        ctx.fillStyle = '#004400';
         // 左侧条纹
-        ctx.fillRect(hx + hw / 2 - hw / 4, hy + hh * 0.4, hw / 8, 4);
-        ctx.fillRect(hx + hw / 2 - hw / 3, hy + hh * 0.6, hw / 6, 4);
+        ctx.fillRect(hx + hw / 2 - hw / 4, hy + hh * 0.35, hw / 8, 6);
+        ctx.fillRect(hx + hw / 2 - hw / 3, hy + hh * 0.55, hw / 6, 6);
         // 右侧条纹
-        ctx.fillRect(hx + hw / 2 + hw / 8, hy + hh * 0.5, hw / 8, 4);
-        ctx.fillRect(hx + hw / 2 + hw / 6, hy + hh * 0.7, hw / 6, 4);
+        ctx.fillRect(hx + hw / 2 + hw / 8, hy + hh * 0.45, hw / 8, 6);
+        ctx.fillRect(hx + hw / 2 + hw / 6, hy + hh * 0.65, hw / 6, 6);
 
         // 山丘顶部亮点
-        ctx.fillStyle = '#10c810';
-        ctx.fillRect(hx + hw / 2 - 4, hy, 8, 4);
+        ctx.fillStyle = '#22ff22';
+        ctx.fillRect(hx + hw / 2 - 6, hy - 2, 12, 6);
+        ctx.fillStyle = '#11dd11';
+        ctx.fillRect(hx + hw / 2 - 4, hy, 8, 2);
     });
 
     // === 灌木丛 ===
@@ -1484,24 +1746,37 @@ function drawBackground() {
         const by = 345;
         const bw = bush.width;
 
-        // 灌木主体 - 绿色
-        ctx.fillStyle = '#00c800';
-        // 底部
-        ctx.fillRect(bx, by, bw, 15);
-        // 中层凸起
+        // 灌木底部 - 最深绿色
+        ctx.fillStyle = '#005500';
+        ctx.fillRect(bx, by + 8, bw, 7);
+
+        // 灌木中层 - 深绿色
+        ctx.fillStyle = '#008800';
+        ctx.fillRect(bx + 2, by + 3, bw - 4, 8);
+
+        // 灌木顶部凸起 - 明亮绿色
+        ctx.fillStyle = '#00cc00';
         const mounds = Math.ceil(bw / 16);
         for (let i = 0; i < mounds; i++) {
             const moundX = bx + i * 16;
             const moundW = Math.min(16, bw - i * 16);
-            ctx.fillRect(moundX, by - 4, moundW, 4);
-            if (i % 2 === 0) {
-                ctx.fillRect(moundX + 4, by - 8, moundW - 8, 4);
-            }
+            // 顶部圆形
+            ctx.beginPath();
+            ctx.ellipse(moundX + moundW / 2, by - 2, moundW / 2 - 2, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 灌木高光 - 浅绿色
+        ctx.fillStyle = '#22ff22';
+        for (let i = 0; i < mounds; i += 2) {
+            const moundX = bx + i * 16;
+            const moundW = Math.min(16, bw - i * 16);
+            ctx.fillRect(moundX + moundW / 4, by - 4, moundW / 2, 3);
         }
 
         // 灌木阴影 - 深绿色
-        ctx.fillStyle = '#00a800';
-        ctx.fillRect(bx, by + 10, bw, 5);
+        ctx.fillStyle = '#004400';
+        ctx.fillRect(bx, by + 12, bw, 3);
     });
 
     // === 远景山脉 ===
@@ -1647,6 +1922,14 @@ function update() {
         }
     });
 
+    // 蘑菇道具收集
+    level.mushrooms.forEach(mushroom => {
+        if (!mushroom.collected && checkCollision(mario, mushroom)) {
+            mushroom.collected = true;
+            applyMushroomPowerUp(mushroom.type);
+        }
+    });
+
     // 更新弹出的金币
     updatePoppedCoins();
 
@@ -1675,8 +1958,29 @@ function update() {
 
             // 与马里奥碰撞
             if (checkCollision(mario, enemy)) {
+                // 隐身状态下会消灭敌人
+                if (mario.isInvincible) {
+                    enemy.alive = false;
+                    enemy.squishTime = 20;
+                    mario.velocityY = mario.jumpPower * 0.6;
+                    score += 200;
+                    updateScoreDisplay();
+                    SoundEffects.stomp();
+
+                    // 添加粒子效果
+                    for (let i = 0; i < 8; i++) {
+                        level.particles.push({
+                            x: enemy.x + enemy.width / 2,
+                            y: enemy.y + enemy.height / 2,
+                            velocityX: (Math.random() - 0.5) * 6,
+                            velocityY: (Math.random() - 0.5) * 6,
+                            life: 30,
+                            color: `rgb(${184 + Math.random() * 30}, ${92 + Math.random() * 20}, ${0 + Math.random() * 10})`
+                        });
+                    }
+                }
                 // 从上方踩到敌人
-                if (mario.velocityY > 0 && mario.y + mario.height - mario.velocityY <= enemy.y + 10) {
+                else if (mario.velocityY > 0 && mario.y + mario.height - mario.velocityY <= enemy.y + 10) {
                     enemy.alive = false;
                     enemy.squishTime = 20; // 添加压扁动画时间
                     mario.velocityY = mario.jumpPower * 0.6;
@@ -1695,8 +1999,8 @@ function update() {
                             color: `rgb(${184 + Math.random() * 30}, ${92 + Math.random() * 20}, ${0 + Math.random() * 10})`
                         });
                     }
-                } else {
-                    // 马里奥受伤
+                } else if (!mario.isInvincible) {
+                    // 马里奥受伤（隐身状态下不受伤）
                     lives--;
                     document.getElementById('lives').textContent = lives;
                     SoundEffects.hurt();
@@ -1716,6 +2020,17 @@ function update() {
         }
     });
 
+    // 更新蘑菇效果计时器
+    if (mario.powerUpTimer > 0) {
+        mario.powerUpTimer--;
+        if (mario.powerUpTimer === 0) {
+            // 效果结束
+            mario.isEnlarged = false;
+            mario.isShrinked = false;
+            mario.isInvincible = false;
+        }
+    }
+
     // 掉落检测
     if (mario.y > canvas.height) {
         lives--;
@@ -1730,6 +2045,11 @@ function update() {
             mario.velocityX = 0;
             mario.velocityY = 0;
             cameraX = 0;
+            // 重置蘑菇效果
+            mario.isEnlarged = false;
+            mario.isShrinked = false;
+            mario.isInvincible = false;
+            mario.powerUpTimer = 0;
         }
     }
 
@@ -1750,6 +2070,11 @@ function update() {
             mario.velocityX = 0;
             mario.velocityY = 0;
             cameraX = 0;
+            // 重置蘑菇效果
+            mario.isEnlarged = false;
+            mario.isShrinked = false;
+            mario.isInvincible = false;
+            mario.powerUpTimer = 0;
             level.poppedCoins = [];
             level.particles = [];
             initLevel();
@@ -1775,14 +2100,72 @@ function draw() {
     drawBackground();
     drawPlatforms();
     drawCoins();
+    drawMushrooms();
     drawEnemies();
     drawFlag();
     drawMario();
     drawParticles();
+    drawPowerUpHUD();
 
     if (gameOver) {
         drawGameOver();
     }
+}
+
+// 绘制蘑菇效果HUD
+function drawPowerUpHUD() {
+    if (mario.powerUpTimer <= 0) return;
+    
+    let powerUpText = '';
+    let powerUpColor = '';
+    
+    if (mario.isEnlarged) {
+        powerUpText = '放大中';
+        powerUpColor = '#ff3333';
+    } else if (mario.isShrinked) {
+        powerUpText = '缩小中';
+        powerUpColor = '#3366ff';
+    } else if (mario.isInvincible) {
+        powerUpText = '隐身中';
+        powerUpColor = '#ffdd00';
+    }
+    
+    if (!powerUpText) return;
+    
+    // 绘制时间条
+    const barWidth = 150;
+    const barHeight = 20;
+    const barX = canvas.width - barWidth - 20;
+    const barY = 20;
+    
+    // 背景
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(barX - 5, barY - 5, barWidth + 10, barHeight + 40);
+    
+    // 文字
+    ctx.fillStyle = powerUpColor;
+    ctx.font = 'bold 14px Arial';
+    ctx.fillText(powerUpText, barX + 5, barY + 15);
+    
+    // 时间条背景
+    ctx.fillStyle = 'rgba(100, 100, 100, 0.7)';
+    ctx.fillRect(barX, barY + 20, barWidth, barHeight);
+    
+    // 时间条填充
+    ctx.fillStyle = powerUpColor;
+    const progress = mario.powerUpTimer / 600;
+    ctx.fillRect(barX, barY + 20, barWidth * progress, barHeight);
+    
+    // 边框
+    ctx.strokeStyle = powerUpColor;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(barX, barY + 20, barWidth, barHeight);
+    
+    // 时间显示
+    const remainingSeconds = Math.ceil(mario.powerUpTimer / 60);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px Arial';
+    ctx.fillText(remainingSeconds + 's', barX + barWidth + 10, barY + 35);
 }
 
 // 游戏循环

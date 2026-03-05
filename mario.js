@@ -196,9 +196,9 @@ const mario = {
     height: 40,
     velocityX: 0,
     velocityY: 0,
-    speed: 5,
-    jumpPower: -15,
-    gravity: 0.6,
+    speed: 8,
+    jumpPower: -20,
+    gravity: 1.2,
     grounded: false,
     direction: 1, // 1 = 右, -1 = 左
     frameX: 0,
@@ -1307,26 +1307,26 @@ function createPoppedCoin(x, y) {
 // 应用蘑菇道具效果
 function applyMushroomPowerUp(type) {
     mario.powerUpTimer = 600; // 10秒 (600帧 @ 60fps)
-    
+
     SoundEffects.coin(); // 使用金币音效
     score += 50;
     updateScoreDisplay();
-    
+
     if (type === 'enlarge') {
         mario.isEnlarged = true;
         mario.isShrinked = false;
         mario.isInvincible = false;
-        mario.speed = 6;
+        mario.speed = 10;
     } else if (type === 'shrink') {
         mario.isShrinked = true;
         mario.isEnlarged = false;
         mario.isInvincible = false;
-        mario.speed = 4;
+        mario.speed = 6;
     } else if (type === 'invincible') {
         mario.isInvincible = true;
         mario.isEnlarged = false;
         mario.isShrinked = false;
-        mario.speed = 5;
+        mario.speed = 8;
     }
 }
 
@@ -2013,6 +2013,11 @@ function update() {
                         mario.y = 300;
                         mario.velocityX = 0;
                         mario.velocityY = 0;
+                        mario.speed = 8; // 重置速度
+                        mario.isEnlarged = false;
+                        mario.isShrinked = false;
+                        mario.isInvincible = false;
+                        mario.powerUpTimer = 0;
                         cameraX = 0;
                     }
                 }
@@ -2028,6 +2033,7 @@ function update() {
             mario.isEnlarged = false;
             mario.isShrinked = false;
             mario.isInvincible = false;
+            mario.speed = 8; // 重置为正常速度
         }
     }
 
@@ -2044,6 +2050,7 @@ function update() {
             mario.y = 300;
             mario.velocityX = 0;
             mario.velocityY = 0;
+            mario.speed = 8; // 重置速度
             cameraX = 0;
             // 重置蘑菇效果
             mario.isEnlarged = false;
@@ -2069,6 +2076,7 @@ function update() {
             mario.y = 300;
             mario.velocityX = 0;
             mario.velocityY = 0;
+            mario.speed = 8; // 重置速度
             cameraX = 0;
             // 重置蘑菇效果
             mario.isEnlarged = false;
@@ -2186,6 +2194,7 @@ function restartGame() {
     mario.y = 300;
     mario.velocityX = 0;
     mario.velocityY = 0;
+    mario.speed = 8; // 重置速度
     cameraX = 0;
     updateScoreDisplay();
     document.getElementById('lives').textContent = lives;

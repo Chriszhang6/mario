@@ -250,6 +250,10 @@ function initLevel() {
         initLevel2();
     } else if (currentLevel === 3) {
         initLevel3();
+    } else if (currentLevel === 4) {
+        initLevel4();
+    } else if (currentLevel === 5) {
+        initLevel5();
     }
 }
 
@@ -845,6 +849,537 @@ function initLevel3() {
     // 终点旗帜
     level.flag = {
         x: 4600,
+        y: 160,
+        width: 10,
+        height: 200
+    };
+}
+
+// 第四关 - 极限难度
+function initLevel4() {
+    level.width = 5600;
+
+    // 地面 - 大量坑洞
+    for (let i = 0; i < 70; i++) {
+        if (i >= 5 && i <= 8) continue;   // 坑1
+        if (i >= 13 && i <= 17) continue;  // 坑2
+        if (i >= 22 && i <= 26) continue;  // 坑3
+        if (i >= 31 && i <= 36) continue;  // 坑4
+        if (i >= 41 && i <= 45) continue;  // 坑5
+        if (i >= 50 && i <= 54) continue;  // 坑6
+        if (i >= 59 && i <= 63) continue;  // 坑7
+
+        level.platforms.push({
+            x: i * 80,
+            y: 360,
+            width: 80,
+            height: 40,
+            type: 'ground'
+        });
+    }
+
+    // 悬浮平台 - 高且分散，需要精确跳跃
+    const floatingPlatforms = [
+        { x: 120, y: 220, width: 60, hasCoin: true },
+        { x: 240, y: 160, width: 60 },
+        { x: 380, y: 100, width: 60, hasCoin: true },
+        { x: 520, y: 240, width: 80 },
+        { x: 680, y: 160, width: 60, hasCoin: true },
+        { x: 820, y: 100, width: 60 },
+        { x: 980, y: 200, width: 80, hasCoin: true },
+        { x: 1140, y: 120, width: 60 },
+        { x: 1280, y: 80, width: 60, hasCoin: true },
+        { x: 1440, y: 200, width: 80 },
+        { x: 1600, y: 120, width: 60, hasCoin: true },
+        { x: 1760, y: 80, width: 60 },
+        { x: 1920, y: 200, width: 80, hasCoin: true },
+        { x: 2100, y: 120, width: 60 },
+        { x: 2260, y: 80, width: 60, hasCoin: true },
+        { x: 2420, y: 220, width: 80 },
+        { x: 2600, y: 140, width: 60, hasCoin: true },
+        { x: 2760, y: 80, width: 60 },
+        { x: 2940, y: 200, width: 80, hasCoin: true },
+        { x: 3120, y: 120, width: 60 },
+        { x: 3300, y: 80, width: 60, hasCoin: true },
+        { x: 3480, y: 220, width: 80 },
+        { x: 3660, y: 140, width: 60, hasCoin: true },
+        { x: 3840, y: 80, width: 60 },
+        { x: 4020, y: 200, width: 80, hasCoin: true },
+        { x: 4200, y: 120, width: 60 },
+        { x: 4380, y: 80, width: 60, hasCoin: true },
+        { x: 4560, y: 220, width: 80 },
+        { x: 4740, y: 140, width: 60, hasCoin: true },
+        { x: 4920, y: 80, width: 60 },
+        { x: 5100, y: 200, width: 80, hasCoin: true },
+        { x: 5300, y: 120, width: 60 }
+    ];
+
+    floatingPlatforms.forEach(p => {
+        level.platforms.push({
+            x: p.x,
+            y: p.y,
+            width: p.width,
+            height: 20,
+            type: p.hasCoin ? 'question' : 'brick',
+            hasCoin: p.hasCoin || false,
+            coinCollected: false,
+            bounceOffset: 0,
+            bounceTime: 0
+        });
+    });
+
+    // 问号砖块
+    const questionBricks = [
+        { x: 80, y: 140 },
+        { x: 200, y: 80 },
+        { x: 340, y: 60 },
+        { x: 480, y: 100 },
+        { x: 640, y: 80 },
+        { x: 800, y: 60 },
+        { x: 960, y: 120 },
+        { x: 1120, y: 60 },
+        { x: 1300, y: 40 },
+        { x: 1480, y: 100 },
+        { x: 1660, y: 60 },
+        { x: 1840, y: 40 },
+        { x: 2020, y: 100 },
+        { x: 2200, y: 60 },
+        { x: 2380, y: 40 },
+        { x: 2560, y: 100 },
+        { x: 2740, y: 60 },
+        { x: 2920, y: 40 },
+        { x: 3100, y: 100 },
+        { x: 3280, y: 60 },
+        { x: 3460, y: 40 },
+        { x: 3640, y: 100 },
+        { x: 3820, y: 60 },
+        { x: 4000, y: 40 },
+        { x: 4180, y: 100 },
+        { x: 4360, y: 60 },
+        { x: 4540, y: 40 },
+        { x: 4720, y: 100 },
+        { x: 4900, y: 60 },
+        { x: 5080, y: 40 }
+    ];
+
+    questionBricks.forEach(b => {
+        level.platforms.push({
+            x: b.x,
+            y: b.y,
+            width: 40,
+            height: 20,
+            type: 'question',
+            hasCoin: true,
+            coinCollected: false,
+            bounceOffset: 0,
+            bounceTime: 0
+        });
+    });
+
+    // 金币
+    const coinPositions = [
+        { x: 100, y: 180 },
+        { x: 260, y: 120 },
+        { x: 400, y: 60 },
+        { x: 560, y: 200 },
+        { x: 720, y: 120 },
+        { x: 880, y: 60 },
+        { x: 1040, y: 160 },
+        { x: 1200, y: 80 },
+        { x: 1380, y: 40 },
+        { x: 1560, y: 160 },
+        { x: 1740, y: 80 },
+        { x: 1960, y: 160 },
+        { x: 2140, y: 80 },
+        { x: 2320, y: 40 },
+        { x: 2500, y: 180 },
+        { x: 2680, y: 100 },
+        { x: 2860, y: 40 },
+        { x: 3060, y: 160 },
+        { x: 3240, y: 80 },
+        { x: 3440, y: 40 },
+        { x: 3620, y: 160 },
+        { x: 3800, y: 80 },
+        { x: 4040, y: 160 },
+        { x: 4220, y: 80 },
+        { x: 4420, y: 40 },
+        { x: 4600, y: 160 },
+        { x: 4780, y: 80 },
+        { x: 4960, y: 40 }
+    ];
+
+    coinPositions.forEach(c => {
+        level.coins.push({
+            x: c.x,
+            y: c.y,
+            width: 20,
+            height: 20,
+            collected: false,
+            frame: 0
+        });
+    });
+
+    // 敌人 - 速度更快更多
+    const enemyPositions = [
+        { x: 200, y: 330, speed: 3.5 },
+        { x: 400, y: 330, speed: 4 },
+        { x: 600, y: 330, speed: 3.8 },
+        { x: 800, y: 330, speed: 4.2 },
+        { x: 1000, y: 330, speed: 3.5 },
+        { x: 1200, y: 330, speed: 4 },
+        { x: 1400, y: 330, speed: 4.2 },
+        { x: 1600, y: 330, speed: 3.8 },
+        { x: 1800, y: 330, speed: 4 },
+        { x: 2000, y: 330, speed: 3.5 },
+        { x: 2200, y: 330, speed: 4.2 },
+        { x: 2400, y: 330, speed: 3.8 },
+        { x: 2600, y: 330, speed: 4 },
+        { x: 2800, y: 330, speed: 3.5 },
+        { x: 3000, y: 330, speed: 4.2 },
+        { x: 3200, y: 330, speed: 3.8 },
+        { x: 3400, y: 330, speed: 4 },
+        { x: 3600, y: 330, speed: 4.2 },
+        { x: 3800, y: 330, speed: 3.5 },
+        { x: 4000, y: 330, speed: 4 },
+        { x: 4200, y: 330, speed: 4.2 },
+        { x: 4400, y: 330, speed: 3.8 },
+        { x: 4600, y: 330, speed: 4 },
+        { x: 4800, y: 330, speed: 4.2 },
+        { x: 5000, y: 330, speed: 3.5 },
+        { x: 5200, y: 330, speed: 4 },
+        { x: 5400, y: 330, speed: 4.2 }
+    ];
+
+    enemyPositions.forEach(e => {
+        level.enemies.push({
+            x: e.x,
+            y: e.y,
+            width: 32,
+            height: 32,
+            velocityX: Math.random() > 0.5 ? e.speed : -e.speed,
+            alive: true,
+            frame: 0,
+            squish: 0,
+            squishTime: 0
+        });
+    });
+
+    level.enemies.forEach(e => {
+        e.y = e.y - 2;
+    });
+
+    // 蘑菇道具 - 第四关
+    const mushroomPositions = [
+        { x: 480, y: 160, type: 'enlarge' },
+        { x: 980, y: 110, type: 'invincible' },
+        { x: 1480, y: 170, type: 'shrink' },
+        { x: 1980, y: 130, type: 'enlarge' },
+        { x: 2480, y: 160, type: 'invincible' },
+        { x: 2980, y: 120, type: 'shrink' },
+        { x: 3480, y: 170, type: 'enlarge' },
+        { x: 3980, y: 140, type: 'invincible' },
+        { x: 4480, y: 120, type: 'shrink' }
+    ];
+
+    mushroomPositions.forEach(m => {
+        level.mushrooms.push({
+            x: m.x,
+            y: m.y,
+            width: 24,
+            height: 24,
+            type: m.type,
+            collected: false,
+            frame: 0
+        });
+    });
+
+    // 终点旗帜
+    level.flag = {
+        x: 5400,
+        y: 160,
+        width: 10,
+        height: 200
+    };
+}
+
+// 第五关 - 最终Boss关卡
+function initLevel5() {
+    level.width = 6400;
+
+    // 地面 - 极多坑洞，考验极限跳跃
+    for (let i = 0; i < 80; i++) {
+        if (i >= 4 && i <= 7) continue;    // 坑1
+        if (i >= 11 && i <= 15) continue;  // 坑2
+        if (i >= 19 && i <= 24) continue;  // 坑3
+        if (i >= 28 && i <= 33) continue;  // 坑4
+        if (i >= 37 && i <= 42) continue;  // 坑5
+        if (i >= 46 && i <= 51) continue;  // 坑6
+        if (i >= 55 && i <= 60) continue;  // 坑7
+        if (i >= 64 && i <= 69) continue;  // 坑8
+        if (i >= 73 && i <= 77) continue;  // 坑9
+
+        level.platforms.push({
+            x: i * 80,
+            y: 360,
+            width: 80,
+            height: 40,
+            type: 'ground'
+        });
+    }
+
+    // 悬浮平台 - 极高极分散，需要连续精确跳跃
+    const floatingPlatforms = [
+        { x: 100, y: 200, width: 60, hasCoin: true },
+        { x: 220, y: 140, width: 60 },
+        { x: 340, y: 80, width: 60, hasCoin: true },
+        { x: 480, y: 220, width: 60 },
+        { x: 600, y: 140, width: 60, hasCoin: true },
+        { x: 740, y: 80, width: 60 },
+        { x: 880, y: 180, width: 60, hasCoin: true },
+        { x: 1020, y: 100, width: 60 },
+        { x: 1160, y: 60, width: 60, hasCoin: true },
+        { x: 1300, y: 200, width: 60 },
+        { x: 1440, y: 100, width: 60, hasCoin: true },
+        { x: 1580, y: 60, width: 60 },
+        { x: 1720, y: 180, width: 60, hasCoin: true },
+        { x: 1880, y: 100, width: 60 },
+        { x: 2040, y: 60, width: 60, hasCoin: true },
+        { x: 2200, y: 200, width: 60 },
+        { x: 2360, y: 100, width: 60, hasCoin: true },
+        { x: 2520, y: 60, width: 60 },
+        { x: 2680, y: 180, width: 60, hasCoin: true },
+        { x: 2840, y: 100, width: 60 },
+        { x: 3000, y: 60, width: 60, hasCoin: true },
+        { x: 3180, y: 200, width: 60 },
+        { x: 3340, y: 100, width: 60, hasCoin: true },
+        { x: 3500, y: 60, width: 60 },
+        { x: 3660, y: 180, width: 60, hasCoin: true },
+        { x: 3840, y: 100, width: 60 },
+        { x: 4000, y: 60, width: 60, hasCoin: true },
+        { x: 4180, y: 200, width: 60 },
+        { x: 4340, y: 100, width: 60, hasCoin: true },
+        { x: 4500, y: 60, width: 60 },
+        { x: 4680, y: 180, width: 60, hasCoin: true },
+        { x: 4840, y: 100, width: 60 },
+        { x: 5000, y: 60, width: 60, hasCoin: true },
+        { x: 5180, y: 200, width: 60 },
+        { x: 5360, y: 100, width: 60, hasCoin: true },
+        { x: 5520, y: 60, width: 60 },
+        { x: 5700, y: 180, width: 60, hasCoin: true },
+        { x: 5860, y: 100, width: 60 },
+        { x: 6020, y: 60, width: 60, hasCoin: true },
+        { x: 6160, y: 200, width: 60 }
+    ];
+
+    floatingPlatforms.forEach(p => {
+        level.platforms.push({
+            x: p.x,
+            y: p.y,
+            width: p.width,
+            height: 20,
+            type: p.hasCoin ? 'question' : 'brick',
+            hasCoin: p.hasCoin || false,
+            coinCollected: false,
+            bounceOffset: 0,
+            bounceTime: 0
+        });
+    });
+
+    // 问号砖块
+    const questionBricks = [
+        { x: 60, y: 120 },
+        { x: 180, y: 60 },
+        { x: 300, y: 40 },
+        { x: 440, y: 100 },
+        { x: 560, y: 60 },
+        { x: 700, y: 40 },
+        { x: 840, y: 100 },
+        { x: 980, y: 60 },
+        { x: 1120, y: 40 },
+        { x: 1260, y: 100 },
+        { x: 1400, y: 60 },
+        { x: 1540, y: 40 },
+        { x: 1680, y: 100 },
+        { x: 1840, y: 60 },
+        { x: 2000, y: 40 },
+        { x: 2160, y: 100 },
+        { x: 2320, y: 60 },
+        { x: 2480, y: 40 },
+        { x: 2640, y: 100 },
+        { x: 2800, y: 60 },
+        { x: 2960, y: 40 },
+        { x: 3140, y: 100 },
+        { x: 3300, y: 60 },
+        { x: 3460, y: 40 },
+        { x: 3620, y: 100 },
+        { x: 3800, y: 60 },
+        { x: 3960, y: 40 },
+        { x: 4140, y: 100 },
+        { x: 4300, y: 60 },
+        { x: 4460, y: 40 },
+        { x: 4640, y: 100 },
+        { x: 4800, y: 60 },
+        { x: 4960, y: 40 },
+        { x: 5140, y: 100 },
+        { x: 5320, y: 60 },
+        { x: 5480, y: 40 },
+        { x: 5660, y: 100 },
+        { x: 5820, y: 60 },
+        { x: 5980, y: 40 },
+        { x: 6120, y: 100 }
+    ];
+
+    questionBricks.forEach(b => {
+        level.platforms.push({
+            x: b.x,
+            y: b.y,
+            width: 40,
+            height: 20,
+            type: 'question',
+            hasCoin: true,
+            coinCollected: false,
+            bounceOffset: 0,
+            bounceTime: 0
+        });
+    });
+
+    // 金币 - 最少但位置最具挑战性
+    const coinPositions = [
+        { x: 80, y: 160 },
+        { x: 240, y: 100 },
+        { x: 380, y: 40 },
+        { x: 520, y: 180 },
+        { x: 660, y: 100 },
+        { x: 820, y: 40 },
+        { x: 980, y: 140 },
+        { x: 1140, y: 60 },
+        { x: 1320, y: 40 },
+        { x: 1500, y: 140 },
+        { x: 1660, y: 60 },
+        { x: 1840, y: 140 },
+        { x: 2020, y: 60 },
+        { x: 2200, y: 40 },
+        { x: 2380, y: 140 },
+        { x: 2560, y: 60 },
+        { x: 2740, y: 40 },
+        { x: 2940, y: 140 },
+        { x: 3120, y: 60 },
+        { x: 3300, y: 40 },
+        { x: 3500, y: 140 },
+        { x: 3680, y: 60 },
+        { x: 3860, y: 40 },
+        { x: 4060, y: 140 },
+        { x: 4240, y: 60 },
+        { x: 4440, y: 40 },
+        { x: 4620, y: 140 },
+        { x: 4800, y: 60 },
+        { x: 4980, y: 40 },
+        { x: 5160, y: 140 },
+        { x: 5340, y: 60 },
+        { x: 5520, y: 40 },
+        { x: 5700, y: 140 },
+        { x: 5880, y: 60 },
+        { x: 6080, y: 40 }
+    ];
+
+    coinPositions.forEach(c => {
+        level.coins.push({
+            x: c.x,
+            y: c.y,
+            width: 20,
+            height: 20,
+            collected: false,
+            frame: 0
+        });
+    });
+
+    // 敌人 - 最多最快，终极挑战
+    const enemyPositions = [
+        { x: 180, y: 330, speed: 4 },
+        { x: 360, y: 330, speed: 4.5 },
+        { x: 540, y: 330, speed: 4.2 },
+        { x: 720, y: 330, speed: 4.8 },
+        { x: 900, y: 330, speed: 4 },
+        { x: 1080, y: 330, speed: 4.5 },
+        { x: 1260, y: 330, speed: 4.8 },
+        { x: 1440, y: 330, speed: 4.2 },
+        { x: 1620, y: 330, speed: 4.5 },
+        { x: 1800, y: 330, speed: 4 },
+        { x: 1980, y: 330, speed: 4.8 },
+        { x: 2160, y: 330, speed: 4.2 },
+        { x: 2340, y: 330, speed: 4.5 },
+        { x: 2520, y: 330, speed: 4 },
+        { x: 2700, y: 330, speed: 4.8 },
+        { x: 2880, y: 330, speed: 4.2 },
+        { x: 3060, y: 330, speed: 4.5 },
+        { x: 3240, y: 330, speed: 4.8 },
+        { x: 3420, y: 330, speed: 4 },
+        { x: 3600, y: 330, speed: 4.5 },
+        { x: 3780, y: 330, speed: 4.2 },
+        { x: 3960, y: 330, speed: 4.8 },
+        { x: 4140, y: 330, speed: 4 },
+        { x: 4320, y: 330, speed: 4.5 },
+        { x: 4500, y: 330, speed: 4.8 },
+        { x: 4680, y: 330, speed: 4.2 },
+        { x: 4860, y: 330, speed: 4.5 },
+        { x: 5040, y: 330, speed: 4 },
+        { x: 5220, y: 330, speed: 4.8 },
+        { x: 5400, y: 330, speed: 4.2 },
+        { x: 5580, y: 330, speed: 4.5 },
+        { x: 5760, y: 330, speed: 4.8 },
+        { x: 5940, y: 330, speed: 4 },
+        { x: 6120, y: 330, speed: 4.5 },
+        { x: 6300, y: 330, speed: 4.8 }
+    ];
+
+    enemyPositions.forEach(e => {
+        level.enemies.push({
+            x: e.x,
+            y: e.y,
+            width: 32,
+            height: 32,
+            velocityX: Math.random() > 0.5 ? e.speed : -e.speed,
+            alive: true,
+            frame: 0,
+            squish: 0,
+            squishTime: 0
+        });
+    });
+
+    level.enemies.forEach(e => {
+        e.y = e.y - 2;
+    });
+
+    // 蘑菇道具 - 第五关，更多道具帮助玩家
+    const mushroomPositions = [
+        { x: 420, y: 160, type: 'enlarge' },
+        { x: 840, y: 110, type: 'invincible' },
+        { x: 1260, y: 170, type: 'shrink' },
+        { x: 1680, y: 130, type: 'enlarge' },
+        { x: 2100, y: 160, type: 'invincible' },
+        { x: 2520, y: 120, type: 'shrink' },
+        { x: 2940, y: 170, type: 'enlarge' },
+        { x: 3360, y: 140, type: 'invincible' },
+        { x: 3780, y: 120, type: 'shrink' },
+        { x: 4200, y: 160, type: 'enlarge' },
+        { x: 4620, y: 140, type: 'invincible' }
+    ];
+
+    mushroomPositions.forEach(m => {
+        level.mushrooms.push({
+            x: m.x,
+            y: m.y,
+            width: 24,
+            height: 24,
+            type: m.type,
+            collected: false,
+            frame: 0
+        });
+    });
+
+    // 终点旗帜
+    level.flag = {
+        x: 6200,
         y: 160,
         width: 10,
         height: 200
@@ -2062,7 +2597,7 @@ function update() {
 
     // 到达终点
     if (checkCollision(mario, level.flag)) {
-        if (currentLevel < 3) {
+        if (currentLevel < 5) {
             // 进入下一关
             currentLevel++;
             maxLevelReached = currentLevel; // 更新到达的最高关卡
